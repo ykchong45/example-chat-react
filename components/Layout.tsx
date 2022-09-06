@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useContext, useEffect, useRef } from 'react'
 import useXmtp from '../hooks/useXmtp'
 import { useRouter } from 'next/router'
 import Head from 'next/head'

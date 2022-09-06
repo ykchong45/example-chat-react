@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ethers, Signer } from 'ethers'
-import Web3Modal, { IProviderOptions, providers } from 'web3modal'
-import WalletConnectProvider from '@walletconnect/web3-provider'
-import WalletLink from 'walletlink'
 import { WalletContext } from '../contexts/wallet'
 import { useRouter } from 'next/router'
+import '@rainbow-me/rainbowkit/styles.css';
+import { chain, configureChains, createClient, useAccount, useConnect, useDisconnect, useNetwork, useProvider, useSigner, WagmiConfig } from 'wagmi';
 
 const ETH_CHAIN_ID = 1 // Ethereum mainnet
 
@@ -19,11 +17,10 @@ type WalletProviderProps = {
 export const WalletProvider = ({
   children,
 }: WalletProviderProps): JSX.Element => {
-  const [provider, setProvider] = useState<ethers.providers.Web3Provider>()
-  const [signer, setSigner] = useState<Signer>()
-  const [web3Modal, setWeb3Modal] = useState<Web3Modal>()
-  const [address, setAddress] = useState<string>()
-  const [chainId, setChainId] = useState<number>()
+  const provider = useProvider();
+  const { address } = useAccount();
+  const { chain: chainId } = useNetwork();
+  const { data: signer } = useSigner();
   const router = useRouter()
 
   const resolveName = useCallback(
@@ -70,121 +67,12 @@ export const WalletProvider = ({
   )
 
   const disconnect = useCallback(async () => {
-    if (!web3Modal) return
-    web3Modal.clearCachedProvider()
-    localStorage.removeItem('walletconnect')
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('-walletlink')) {
-        localStorage.removeItem(key)
-      }
-    })
-    setSigner(undefined)
-    setAddress(undefined)
-    router.push('/')
-  }, [web3Modal, router])
+    disconnectAccount();
+    // router.push('/')
+  }, [router])
 
-  const handleAccountsChanged = useCallback(
-    async (accounts: string[]) => {
-      if (address && accounts.indexOf(address) < 0) {
-        await disconnect()
-      }
-    },
-    [address, disconnect]
-  )
-
-  const handleChainChanged = useCallback(
-    ({ chainId }) => {
-      console.log('Chain changed to', chainId)
-      setChainId(chainId)
-    },
-    [setChainId]
-  )
-
-  const connect = useCallback(async () => {
-    if (!web3Modal) throw new Error('web3Modal not initialized')
-    try {
-      const instance = await web3Modal.connect()
-      if (!instance) return
-      instance.on('accountsChanged', handleAccountsChanged)
-      const provider = new ethers.providers.Web3Provider(instance, 'any')
-      provider.on('network', handleChainChanged)
-      const signer = provider.getSigner()
-      const { chainId } = await provider.getNetwork()
-      setChainId(chainId)
-      setSigner(signer)
-      setAddress(await signer.getAddress())
-      return signer
-    } catch (e) {
-      // TODO: better error handling/surfacing here.
-      // Note that web3Modal.connect throws an error when the user closes the
-      // modal, as "User closed modal"
-      console.log('error', e)
-    }
-  }, [web3Modal, handleAccountsChanged, handleChainChanged])
-
-  useEffect(() => {
-    const infuraId =
-      process.env.NEXT_PUBLIC_INFURA_ID || 'b6058e03f2cd4108ac890d3876a56d0d'
-    const providerOptions: IProviderOptions = {
-      walletconnect: {
-        package: WalletConnectProvider,
-        options: {
-          infuraId,
-        },
-      },
-    }
-    if (
-      !window.ethereum ||
-      (window.ethereum && !window.ethereum.isCoinbaseWallet)
-    ) {
-      providerOptions.walletlink = {
-        package: WalletLink,
-        options: {
-          appName: 'Chat via XMTP',
-          infuraId,
-          // darkMode: false,
-        },
-      }
-    }
-    if (!window.ethereum || !window.ethereum.isMetaMask) {
-      providerOptions['custom-metamask'] = {
-        display: {
-          logo: providers.METAMASK.logo,
-          name: 'Install MetaMask',
-          description: 'Connect using browser wallet',
-        },
-        package: {},
-        connector: async () => {
-          window.open('https://metamask.io')
-          // throw new Error("MetaMask not installed");
-        },
-      }
-    }
-    setWeb3Modal(new Web3Modal({ cacheProvider: true, providerOptions }))
-  }, [])
-
-  useEffect(() => {
-    if (!web3Modal) return
-    const initCached = async () => {
-      const cachedProviderJson = localStorage.getItem(
-        'WEB3_CONNECT_CACHED_PROVIDER'
-      )
-      if (!cachedProviderJson) return
-      const cachedProviderName = JSON.parse(cachedProviderJson)
-      const instance = await web3Modal.connectTo(cachedProviderName)
-      if (!instance) return
-      instance.on('accountsChanged', handleAccountsChanged)
-      const provider = new ethers.providers.Web3Provider(instance, 'any')
-      provider.on('network', handleChainChanged)
-      const signer = provider.getSigner()
-      const { chainId } = await provider.getNetwork()
-      setChainId(chainId)
-      setProvider(provider)
-      setSigner(signer)
-      setAddress(await signer.getAddress())
-    }
-    initCached()
-  }, [web3Modal, handleAccountsChanged, handleChainChanged])
+  const { connect } = useConnect();
+  const { disconnect: disconnectAccount } = useDisconnect();
 
   return (
     <WalletContext.Provider
@@ -192,7 +80,6 @@ export const WalletProvider = ({
         provider,
         signer,
         address,
-        web3Modal,
         chainId,
         resolveName,
         lookupAddress,

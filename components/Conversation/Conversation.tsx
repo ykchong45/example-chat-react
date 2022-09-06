@@ -3,6 +3,7 @@ import useXmtp from '../../hooks/useXmtp'
 import useConversation from '../../hooks/useConversation'
 import { MessagesList, MessageComposer } from './'
 import Loader from '../../components/Loader'
+import { useAccount, useProvider } from 'wagmi'
 
 type ConversationProps = {
   recipientWalletAddr: string
@@ -22,6 +23,12 @@ const Conversation = ({
     recipientWalletAddr,
     scrollToMessagesEndRef
   )
+  console.log("test print!")
+  // test 
+  const {address} = useAccount();
+  console.log("test address: ", address);
+  const wagmiProvider = useProvider();
+  console.log("test wagmiProvider: ", wagmiProvider);
 
   const hasMessages = messages.length > 0
   useEffect(() => {
@@ -44,6 +51,7 @@ const Conversation = ({
       />
     )
   }
+  
 
   return (
     <main className="flex flex-col flex-1 bg-white h-screen">

@@ -23,15 +23,18 @@
   "dependencies": {
     "@headlessui/react": "^1.4.3",
     "@heroicons/react": "^1.0.5",
+    "@rainbow-me/rainbowkit": "^0.5.1",
+    "@tanstack/react-query": "^4.2.3",
     "@xmtp/xmtp-js": "^6.0.0",
-    "ethers": "^5.5.3",
+    "ethers": "^5.7.0",
     "imagemin-svgo": "^9.0.0",
     "next": "12.0.9",
     "next-optimized-images": "^2.6.2",
     "react": "17.0.2",
     "react-blockies": "^1.4.1",
     "react-dom": "17.0.2",
-    "react-emoji-render": "^1.2.4"
+    "react-emoji-render": "^1.2.4",
+    "wagmi": "^0.6.4"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.4.0",

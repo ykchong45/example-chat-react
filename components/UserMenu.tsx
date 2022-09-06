@@ -7,66 +7,165 @@ import Address from './Address'
 import useXmtp from '../hooks/useXmtp'
 import useEns from '../hooks/useEns'
 import { Tooltip } from './Tooltip/Tooltip'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
 
 type UserMenuProps = {
   onConnect?: () => Promise<void>
   onDisconnect?: () => Promise<void>
 }
 
-type AvatarBlockProps = {
-  walletAddress: string
-  avatarUrl?: string
-}
+// type AvatarBlockProps = {
+//   walletAddress: string
+//   avatarUrl?: string
+// }
 
-const AvatarBlock = ({ walletAddress }: AvatarBlockProps) => {
-  const { avatarUrl, loading } = useEns(walletAddress)
-  if (loading) {
-    return (
-      <div className="animate-pulse flex">
-        <div className="rounded-full bg-n-200 h-8 w-8 mr-2" />
-      </div>
-    )
-  }
-  return avatarUrl ? (
-    <div>
-      <div className="rounded-full w-8 h-8 mr-2 border border-n-80" />
-      <img
-        className={'rounded-full h-8 w-8 -mt-8'}
-        src={avatarUrl}
-        alt={walletAddress}
-      />
-    </div>
-  ) : (
-    <Blockies seed={walletAddress} size={8} className="rounded-full mr-2" />
-  )
-}
+// const AvatarBlock = ({ walletAddress }: AvatarBlockProps) => {
+//   const { avatarUrl, loading } = useEns(walletAddress)
+//   if (loading) {
+//     return (
+//       <div className="animate-pulse flex">
+//         <div className="rounded-full bg-n-200 h-8 w-8 mr-2" />
+//       </div>
+//     )
+//   }
+//   return avatarUrl ? (
+//     <div>
+//       <div className="rounded-full w-8 h-8 mr-2 border border-n-80" />
+//       <img
+//         className={'rounded-full h-8 w-8 -mt-8'}
+//         src={avatarUrl}
+//         alt={walletAddress}
+//       />
+//     </div>
+//   ) : (
+//     <Blockies seed={walletAddress} size={8} className="rounded-full mr-2" />
+//   )
+// }
 
-const NotConnected = ({ onConnect }: UserMenuProps): JSX.Element => {
+// const NotConnected = ({ onConnect }: UserMenuProps): JSX.Element => {
+//   return (
+//     <>
+//       <div>
+//         <div className="flex items-center">
+//           <div className="bg-y-100 rounded-full h-2 w-2 mr-1"></div>
+//           <p className="text-sm font-bold text-y-100">You are not connected.</p>
+//         </div>
+
+//         <a onClick={onConnect}>
+//           <p className="text-sm font-normal text-y-100 hover:text-y-200 ml-3 cursor-pointer">
+//             Sign in with your wallet
+//           </p>
+//         </a>
+//       </div>
+//       <button
+//         className="max-w-xs flex items-center text-sm rounded focus:outline-none"
+//         onClick={onConnect}
+//       >
+//         <span className="sr-only">Connect</span>
+//         <CogIcon
+//           className="h-6 w-6 md:h-5 md:w-5 fill-n-100 hover:fill-n-200"
+//           aria-hidden="true"
+//         />
+//       </button>
+//     </>
+//   )
+// }
+
+
+const CustomConnectButton = () => {
   return (
-    <>
-      <div>
-        <div className="flex items-center">
-          <div className="bg-y-100 rounded-full h-2 w-2 mr-1"></div>
-          <p className="text-sm font-bold text-y-100">You are not connected.</p>
-        </div>
+    <ConnectButton.Custom>
+      {({
+        account,
+        chain,
+        openAccountModal,
+        openChainModal,
+        openConnectModal,
+        authenticationStatus,
+        mounted,
+      }) => {
+        // Note: If your app doesn't use authentication, you
+        // can remove all 'authenticationStatus' checks
+        const ready = mounted && authenticationStatus !== 'loading';
+        const connected =
+          ready &&
+          account &&
+          chain &&
+          (!authenticationStatus ||
+            authenticationStatus === 'authenticated');
 
-        <a onClick={onConnect}>
-          <p className="text-sm font-normal text-y-100 hover:text-y-200 ml-3 cursor-pointer">
-            Sign in with your wallet
-          </p>
-        </a>
-      </div>
-      <button
-        className="max-w-xs flex items-center text-sm rounded focus:outline-none"
-        onClick={onConnect}
-      >
-        <span className="sr-only">Connect</span>
-        <CogIcon
-          className="h-6 w-6 md:h-5 md:w-5 fill-n-100 hover:fill-n-200"
-          aria-hidden="true"
-        />
-      </button>
-    </>
+        return (
+          <div
+            {...(!ready && {
+              'aria-hidden': true,
+              'style': {
+                opacity: 0,
+                pointerEvents: 'none',
+                userSelect: 'none',
+              },
+            })}
+          >
+            {(() => {
+              if (!connected) {
+                return (
+                  <button className="text-white" onClick={openConnectModal} type="button">
+                    Connect Wallet
+                  </button>
+                );
+              }
+
+              if (chain.unsupported) {
+                return (
+                  <button className="text-white" onClick={openChainModal} type="button">
+                    Wrong network
+                  </button>
+                );
+              }
+
+              return (
+                <div className='text-white' style={{ display: 'flex', gap: 12 }}>
+                  <button
+                    onClick={openChainModal}
+                    style={{ display: 'flex', alignItems: 'center' }}
+                    type="button"
+                  >
+                    {chain.hasIcon && (
+                      <div
+                        style={{
+                          background: chain.iconBackground,
+                          width: 12,
+                          height: 12,
+                          borderRadius: 999,
+                          overflow: 'hidden',
+                          marginRight: 4,
+                        }}
+                      >
+                        {chain.iconUrl && (
+                          <img
+                            alt={chain.name ?? 'Chain icon'}
+                            src={chain.iconUrl}
+                            style={{ width: 12, height: 12 }}
+                          />
+                        )}
+                      </div>
+                    )}
+                    {chain.name}
+                  </button>
+
+                  <button onClick={openAccountModal} type="button">
+                    <p>{account.displayName}</p>
+                    <p>{account.displayBalance
+                      ? ` (${account.displayBalance})`
+                      : ''}
+                    </p>
+                  </button>
+                </div>
+              );
+            })()}
+          </div>
+        );
+      }}
+    </ConnectButton.Custom>
   )
 }
 
@@ -80,8 +179,12 @@ const UserMenu = ({ onConnect, onDisconnect }: UserMenuProps): JSX.Element => {
   }, [walletAddress])
 
   return (
-    <div className="flex bg-p-600 items-center justify-between rounded-lg h-[8vh] max-h-16 mx-4 mb-5 md:mb-4 px-4 drop-shadow-xl">
-      {walletAddress ? (
+    <div
+      className="flex bg-p-600 items-center justify-between rounded-lg h-[8vh] max-h-16 mx-4 mb-5 md:mb-4 px-4 drop-shadow-xl"
+      style={{ padding: "2rem" }}  
+    >
+      <CustomConnectButton />
+      {/* {walletAddress ? (
         <Menu>
           {({ open }) => (
             <>
@@ -189,7 +292,7 @@ const UserMenu = ({ onConnect, onDisconnect }: UserMenuProps): JSX.Element => {
         </Menu>
       ) : (
         <NotConnected onConnect={onConnect} />
-      )}
+      )} */}
     </div>
   )
 }

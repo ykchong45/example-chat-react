@@ -1,4 +1,6 @@
 import packageJson from '../package.json'
+import Image from 'next/image'
+import Robot from '../public/robot.gif'
 import useXmtp from '../hooks/useXmtp'
 import { classNames } from '../helpers'
 import {
@@ -8,6 +10,7 @@ import {
   ChevronRightIcon,
   ArrowSmRightIcon,
 } from '@heroicons/react/solid'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
 
 type XmtpInfoRowProps = {
   icon: JSX.Element
@@ -52,29 +55,15 @@ const InfoRow = ({
 
 const XmtpInfoPanel = ({ onConnect }: XmtpInfoPanelProps): JSX.Element => {
   const { walletAddress, client } = useXmtp()
-  const InfoRows = [
-    {
-      icon: <LinkIcon />,
-      headingText: 'Connect your wallet',
-      subHeadingText: 'Verify your wallet to start using the XMTP protocol',
-      onClick: onConnect,
-      disabled: !!walletAddress && !client,
-    },
-    {
-      icon: <BookOpenIcon />,
-      headingText: 'Read the docs',
-      subHeadingText:
-        'Check out the documentation for our protocol and find out how to get up and running quickly',
-      onClick: () => window.open('https://docs.xmtp.org', '_blank'),
-    },
-    {
-      icon: <UserGroupIcon />,
-      headingText: 'Join our community',
-      subHeadingText:
-        'Talk about what you’re building or find out other projects that are building upon XMTP',
-      onClick: () => window.open('https://community.xmtp.org', '_blank'),
-    },
-  ]
+  // const InfoRows = [
+  //   {
+  //     icon: <LinkIcon />,
+  //     headingText: 'Connect your wallet',
+  //     subHeadingText: 'Connect!',
+  //     onClick: () => { },
+  //     disabled: !!walletAddress && !client,
+  //   },
+  // ]
 
   return (
     // The info panel is only shown in desktop layouts.
@@ -88,7 +77,15 @@ const XmtpInfoPanel = ({ onConnect }: XmtpInfoPanelProps): JSX.Element => {
         </div>
       </div>
       <div>
-        {InfoRows.map((info, index) => {
+        <Image src={Robot} />
+        <div className="mt-2 flex justify-center">
+        <ConnectButton
+          // accountStatus="address"
+          // chainStatus="none"
+          // showBalance={false}
+        />
+        </div>
+        {/* {InfoRows.map((info, index) => {
           return (
             <InfoRow
               key={index}
@@ -99,18 +96,7 @@ const XmtpInfoPanel = ({ onConnect }: XmtpInfoPanelProps): JSX.Element => {
               disabled={info.disabled}
             />
           )
-        })}
-      </div>
-      <div className="flex justify-between items-center mt-4">
-        <div className="text-n-600 text-sm">v{packageJson.version}</div>
-        <a
-          href="https://blog.xmtp.com/contact/"
-          target="_blank"
-          className="text-l-300 font-semibold text-md flex items-center"
-          rel="noreferrer"
-        >
-          I need help <ArrowSmRightIcon className="h-5 fill-l-300" />
-        </a>
+        })} */}
       </div>
     </div>
   )
